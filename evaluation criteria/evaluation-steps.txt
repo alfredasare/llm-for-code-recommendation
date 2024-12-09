@@ -1,0 +1,57 @@
+steps = [
+    {
+        "name": "Relevance and Applicability",
+        "evaluation_steps": [
+            "Verify if the 'actual output' (recommendation) directly addresses the specific vulnerability identified in the 'input' (context), including CWE, CVE, and details from the code snippet.",
+            "Ensure the 'actual output' provides a solution that is applicable to both the provided context (CWE/CVE information) and the code snippet and can realistically be implemented in the given scenario.",
+            "Assess whether the recommendation avoids irrelevant information or suggestions that do not align with the vulnerability details or coding context.",
+            "Determine if the recommendation includes practical and actionable steps that align with the specific characteristics of the vulnerability, such as the type of flaw and its occurrence within the code.",
+            "Penalize any 'actual output' that is generic, lacks relevance to both the context and the code provided, or suggests impractical or inapplicable solutions.",
+            "Penalize heavily if the CVE and CWE mentioned in the 'input' context do not match or align with the content of the recommendation."
+        ]
+    },
+    {
+        "name": "Completeness and Thoroughness",
+        "evaluation_steps": [
+            "Check if the 'actual output' (recommendation) covers all necessary steps to fully address the vulnerability described in the 'input' (context), including CWE, CVE, and the code snippet.",
+            "Ensure that the recommendation provides detailed explanations and instructions for each step, leaving no ambiguity about how to implement the fix, referencing both the vulnerable code and the retrieved context.",
+            "Evaluate whether the recommendation considers all relevant aspects of the vulnerability, including its nature, impact, and potential variations in different coding contexts.",
+            "Identify any missing steps or details in the 'actual output' that could lead to incomplete implementation or residual vulnerabilities.",
+            "Penalize any 'actual output' that lacks comprehensiveness, omits critical details, or provides insufficient guidance for implementing a complete fix.",
+            "Penalize heavily if the CVE and CWE mentioned in the 'input' context do not match or align with the content of the recommendation."
+        ]
+    },
+    {
+        "name": "Correctness and Accuracy",
+        "evaluation_steps": [
+            "Check if the 'actual output' (recommendation) aligns with the correct approach to fixing the vulnerability described in the 'input' (context), including CWE, CVE, and the code snippet.",
+            "Verify the technical accuracy of each step in the 'actual output', ensuring they are based on sound principles, the provided code, and best practices for security fixes.",
+            "Identify any factual inaccuracies, technical errors, or misleading information in the 'actual output' that could lead to incorrect implementation or further vulnerabilities.",
+            "Evaluate if the 'actual output' correctly interprets the vulnerability details (CWE, CVE) and provides an appropriate solution based on known standards and methodologies.",
+            "Penalize any 'actual output' that contains factual inaccuracies, incorrect technical guidance, or misleading statements.",
+            "Penalize heavily if the CVE and CWE mentioned in the 'input' context do not match or align with the content of the recommendation."
+        ]
+    },
+    {
+        "name": "Identification of Vulnerable Code",
+        "evaluation_steps": [
+            "Check if the 'actual output' (recommendation) clearly identifies the specific lines, functions, or code snippets in the 'input' (context) that are vulnerable.",
+            "Ensure the 'actual output' pinpoints the exact location of the vulnerability in the code snippet, referencing relevant details such as line numbers or specific code segments.",
+            "Assess whether the recommendation provides enough detail to locate the vulnerable code without ambiguity or confusion.",
+            "Evaluate if the 'actual output' includes all relevant parts of the code that are vulnerable, without missing any significant areas.",
+            "Penalize any 'actual output' that fails to identify the vulnerable code clearly, is too vague, or misidentifies non-vulnerable code as vulnerable.",
+            "Penalize heavily if the CVE and CWE mentioned in the 'input' context do not match or align with the content of the recommendation."
+        ]
+    },
+    {
+        "name": "Code Snippets and Guidance",
+        "evaluation_steps": [
+            "Check if the 'actual output' (recommendation) includes relevant and actionable code snippets that directly address the vulnerability described in the 'input' (context).",
+            "Ensure that the code snippets provided are syntactically correct, follow best practices, and are applicable to the coding environment specified in the context.",
+            "Assess whether the 'actual output' provides clear, step-by-step guidance on how to implement the code changes to fix the vulnerability.",
+            "Evaluate if the recommendation includes sufficient detail in the code snippets and guidance to be easily implemented by a developer without needing additional information.",
+            "Penalize any 'actual output' that lacks relevant code snippets, provides vague or incorrect guidance, or includes incomplete or confusing instructions.",
+            "Penalize heavily if the CVE and CWE mentioned in the 'input' context do not match or align with the content of the recommendation."
+        ]
+    }
+]
