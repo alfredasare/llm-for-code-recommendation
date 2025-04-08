@@ -21,6 +21,11 @@ messages = [
         
         # PROMPT #
         Based on the following vulnerable code and the given recommendation, generate a fixed version of the code:
+        
+        Vulnerable Code:
+        {vulnerable_code}
+    
+        Context:
         {context}
     """),
 ]

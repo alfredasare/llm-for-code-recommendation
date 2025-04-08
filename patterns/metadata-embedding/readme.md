@@ -2,28 +2,35 @@
 
 ## Intent
 
-The Metadata Embedding Pattern aims to generate embeddings based solely on detailed metadata fields without combining them into a single context or string. This pattern seeks to capture the unique characteristics of each metadata field individually.
+Generate embeddings based on key-value pair fields without combining them into a single context or string.
 
 ## Motivation
 
-This pattern is particularly useful when dealing with datasets where each piece of metadata carries significant weight and should be represented independently. When combined into a single context, the embeddings can introduce noise or inaccuracies due to overlapping information. By embedding metadata fields separately, we aim to reduce noise and potentially increase the retrieval accuracy.
+Useful when dealing with datasets where each piece of key-value pair carries significant weight and should be represented independently.
 
 ## Applicability
 
-The Metadata Embedding Pattern is ideal when the dataset contains structured data with distinct fields that require individual representation. It is especially beneficial when the primary objective is to enhance the precision of embeddings by preventing the combination of unrelated metadata. Furthermore, this pattern is well-suited for datasets with high variability, where merging fields into a single context would otherwise lead to retrieval inaccuracies due to the loss of important distinctions between different fields.
+Ideal when the dataset contains structured data with distinct fields that require individual representation.
 
 ## Advantages
 
-The Metadata Embedding Pattern attempts to capture detailed and distinct information for each metadata field, ensuring that each piece of data retains its unique representation.
+Attempts to capture detailed and distinct information for each key-value pair, ensuring that each piece of data retains its unique representation.
 
 ## Disadvantages
 
-This pattern is more complex to implement and maintain when compared to simpler approaches, such as the Vanilla Pattern. Additionally, similar embeddings may still arise if multiple entries share common metadata values, potentially complicating the retrieval results and leading to some degree of overlap.
+Complex to implement and similar embeddings may arise if multiple entries share similar key-value pairs, potentially leading to token overlap.
 
 ## Implementation
 
-The Metadata Embedding Pattern is implemented by individually encoding each metadata field into dense and sparse vectors. These vectors are then aggregated, averaging the dense vectors while combining sparse vectors by summing duplicate indices. This aggregation process ensures that each field's unique characteristics are retained.  
-When a query is processed, the same encoding process is applied to the query string, generating dense and sparse vectors. These vectors are used to query the vector database, retrieving results based on both vector types.
+- Individually encoding each data field into dense and sparse vectors.
+- Sparse and dense vectors are created based on individual key-value pairs and combined.
+- Vectorize the vulnerable code search query.
+- Search the vector database using the encoded query vectors to retrieve results.
+
+## Dataset characteristics
+
+- Metadata uniqueness
+- Syntactical diversity
 
 ### Metadata Embedding Pattern Workflow
 

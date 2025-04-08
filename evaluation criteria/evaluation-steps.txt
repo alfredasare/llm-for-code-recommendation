@@ -1,6 +1,6 @@
 steps = [
     {
-        "name": "Relevance and Applicability",
+        "name": "Relevance",
         "evaluation_steps": [
             "Verify if the 'actual output' (recommendation) directly addresses the specific vulnerability identified in the 'input' (context), including CWE, CVE, and details from the code snippet.",
             "Ensure the 'actual output' provides a solution that is applicable to both the provided context (CWE/CVE information) and the code snippet and can realistically be implemented in the given scenario.",
@@ -11,7 +11,7 @@ steps = [
         ]
     },
     {
-        "name": "Completeness and Thoroughness",
+        "name": "Completeness",
         "evaluation_steps": [
             "Check if the 'actual output' (recommendation) covers all necessary steps to fully address the vulnerability described in the 'input' (context), including CWE, CVE, and the code snippet.",
             "Ensure that the recommendation provides detailed explanations and instructions for each step, leaving no ambiguity about how to implement the fix, referencing both the vulnerable code and the retrieved context.",
@@ -22,7 +22,7 @@ steps = [
         ]
     },
     {
-        "name": "Correctness and Accuracy",
+        "name": "Correctness",
         "evaluation_steps": [
             "Check if the 'actual output' (recommendation) aligns with the correct approach to fixing the vulnerability described in the 'input' (context), including CWE, CVE, and the code snippet.",
             "Verify the technical accuracy of each step in the 'actual output', ensuring they are based on sound principles, the provided code, and best practices for security fixes.",
@@ -44,7 +44,7 @@ steps = [
         ]
     },
     {
-        "name": "Code Snippets and Guidance",
+        "name": "Code Guidance",
         "evaluation_steps": [
             "Check if the 'actual output' (recommendation) includes relevant and actionable code snippets that directly address the vulnerability described in the 'input' (context).",
             "Ensure that the code snippets provided are syntactically correct, follow best practices, and are applicable to the coding environment specified in the context.",
