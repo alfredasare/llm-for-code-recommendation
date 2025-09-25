@@ -1,4 +1,4 @@
-from langchain.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from typing import Type, List
@@ -8,6 +8,7 @@ from langchain_text_splitters import (
     Language,
     RecursiveCharacterTextSplitter,
 )
+import tiktoken
 
 # sample vulnerable code
 code_before = """
@@ -988,16 +989,172 @@ retrieved_data = """
 Context:\nRetrieved metadata: {\'context\': \'CWE ID: CWE-119\', \'cwe\': \'CWE-119\', \'cwe_description\': \'The product performs operations on a memory buffer, but it can read from or write to a memory location that is outside of the intended boundary of the buffer.\', \'extended_cwe_description\': \'Certain languages allow direct addressing of memory locations and do not automatically ensure that these locations are valid for the memory buffer that is being referenced. This can cause read or write operations to be performed on memory locations that may be associated with other variables, data structures, or internal program data. As a result, an attacker may be able to execute arbitrary code, alter the intended control flow, read sensitive information, or cause the system to crash.\', \'name\': \'Improper Restriction of Operations within the Bounds of a Memory Buffer\', \'notes\': \'::TYPE:Applicable Platform:NOTE:It is possible in any programming languages without memory management support to attempt an operation outside of the bounds of a memory buffer, but the consequences will vary widely depending on the language, platform, and chip architecture.::\', \'potential_mitigations\': "::PHASE:Requirements:STRATEGY:Language Selection:DESCRIPTION:Use a language that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. For example, many languages that perform their own memory management, such as Java and Perl, are not subject to buffer overflows. Other languages, such as Ada and C#, typically provide overflow protection, but the protection can be disabled by the programmer. Be wary that a language\'s interface to native code may still be subject to overflows, even if the language itself is theoretically safe.::PHASE:Architecture and Design:STRATEGY:Libraries or Frameworks:DESCRIPTION:Use a vetted library or framework that does not allow this weakness to occur or provides constructs that make this weakness easier to avoid. Examples include the Safe C String Library (SafeStr) by Messier and Viega [REF-57], and the Strsafe.h library from Microsoft [REF-56]. These libraries provide safer versions of overflow-prone string-handling functions.::PHASE:Operation Build and Compilation:STRATEGY:Environment Hardening:DESCRIPTION:Use automatic buffer overflow detection mechanisms that are offered by certain compilers or compiler extensions. Examples include: the Microsoft Visual Studio /GS flag, Fedora/Red Hat FORTIFY_SOURCE GCC flag, StackGuard, and ProPolice, which provide various mechanisms including canary-based detection and range/index checking. D3-SFCV (Stack Frame Canary Validation) from D3FEND [REF-1334] discusses canary-based detection in detail.:EFFECTIVENESS:Defense in Depth::PHASE:Implementation:DESCRIPTION:Consider adhering to the following rules when allocating and managing an application\'s memory: Double check that the buffer is as large as specified. When using functions that accept a number of bytes to copy, such as strncpy(), be aware that if the destination buffer size is equal to the source buffer size, it may not NULL-terminate the string. Check buffer boundaries if accessing the buffer in a loop and make sure there is no danger of writing past the allocated space. If necessary, truncate all input strings to a reasonable length before passing them to the copy and concatenation functions.::PHASE:Operation Build and Compilation:STRATEGY:Environment Hardening:DESCRIPTION:Run or compile the software using features or extensions that randomly arrange the positions of a program\'s executable and libraries in memory. Because this makes the addresses unpredictable, it can prevent an attacker from reliably jumping to exploitable code. Examples include Address Space Layout Randomization (ASLR) [REF-58] [REF-60] and Position-Independent Executables (PIE) [REF-64]. Imported modules may be similarly realigned if their default memory addresses conflict with other modules, in a process known as rebasing (for Windows) and prelinking (for Linux) [REF-1332] using randomly generated addresses. ASLR for libraries cannot be used in conjunction with prelink since it would require relocating the libraries at run-time, defeating the whole purpose of prelinking. For more information on these techniques see D3-SAOR (Segment Address Offset Randomization) from D3FEND [REF-1335].:EFFECTIVENESS:Defense in Depth::PHASE:Operation:STRATEGY:Environment Hardening:DESCRIPTION:Use a CPU and operating system that offers Data Execution Protection (using hardware NX or XD bits) or the equivalent techniques that simulate this feature in software, such as PaX [REF-60] [REF-61]. These techniques ensure that any instruction executed is exclusively at a memory address that is part of the code segment. For more information on these techniques see D3-PSEP (Process Segment Execution Prevention) from D3FEND [REF-1336].:EFFECTIVENESS:Defense in Depth::PHASE:Implementation:DESCRIPTION:Replace unbounded copy functions with analogous functions that support length arguments, such as strcpy with strncpy. Create these if they are not available.:EFFECTIVENESS:Moderate::"}\n\nVulnerability: CVE-2012-3364\nWeakness: CWE-119\nRetrieved metadata: {\'Summary\': \'FreeRDP prior to version 2.0.0-rc4 contains a Heap-Based Buffer Overflow in function zgfx_decompress() that results in a memory corruption and probably even a remote code execution.\', \'context\': \'Vulnerability: CVE-2018-8785\\nWeakness: CWE-119\', \'cve\': \'CVE-2018-8785\', \'cwe\': \'CWE-119\', \'func_after\': \'static BOOL zgfx_compress_segment(ZGFX_CONTEXT* zgfx, wStream* s, const BYTE* pSrcData,\\n                                  UINT32 SrcSize, UINT32* pFlags)\\n{\\n\\t/* FIXME: Currently compression not implemented. Just copy the raw source */\\n\\tif (!Stream_EnsureRemainingCapacity(s, SrcSize + 1))\\n\\t{\\n\\t\\tWLog_ERR(TAG, "Stream_EnsureRemainingCapacity failed!");\\n\\t\\treturn FALSE;\\n\\t}\\n\\n\\t(*pFlags) |= ZGFX_PACKET_COMPR_TYPE_RDP8; /* RDP 8.0 compression format */\\n\\tStream_Write_UINT8(s, (*pFlags)); /* header (1 byte) */\\n\\tStream_Write(s, pSrcData, SrcSize);\\n\\treturn TRUE;\\n}\\n\', \'func_before\': \'static BOOL zgfx_compress_segment(ZGFX_CONTEXT* zgfx, wStream* s, const BYTE* pSrcData,\\n                                  UINT32 SrcSize, UINT32* pFlags)\\n{\\n\\t/* FIXME: Currently compression not implemented. Just copy the raw source */\\n\\tif (!Stream_EnsureRemainingCapacity(s, SrcSize + 1))\\n\\t{\\n\\t\\tWLog_ERR(TAG, "Stream_EnsureRemainingCapacity failed!");\\n\\t\\treturn FALSE;\\n\\t}\\n\\n\\t(*pFlags) |= ZGFX_PACKET_COMPR_TYPE_RDP8; /* RDP 8.0 compression format */\\n\\tStream_Write_UINT8(s, (*pFlags)); /* header (1 byte) */\\n\\tStream_Write(s, pSrcData, SrcSize);\\n\\treturn TRUE;\\n}\\n\'}\n
 """
 
-splitter = RecursiveCharacterTextSplitter.from_language(
-    language=Language.CPP, chunk_size=6000, chunk_overlap=0
-)
-docs = splitter.create_documents([code_before])
+def create_intelligent_chunks(code: str, retrieved_data: str, language: Language = Language.CPP) -> List[str]:
+    """Create chunks with optimal size based on context window."""
+    optimal_chunk_size = calculate_optimal_chunk_size(CONTEXT_WINDOW, retrieved_data)
+    
+    splitter = RecursiveCharacterTextSplitter.from_language(
+        language=language,
+        chunk_size=optimal_chunk_size,
+        chunk_overlap=int(optimal_chunk_size * 0.1)  # 10% overlap
+    )
+    docs = splitter.create_documents([code])
+    return [doc.page_content for doc in docs]
 
-code_chunks = [doc.page_content for doc in docs]
+def analyze_code_intelligently(code: str, retrieved_data: str) -> List[str]:
+    """Main intelligent analysis function that decides between direct LLM and chunking."""
+    print(f"Code length: {len(code)} characters")
+    print(f"Estimated tokens: {count_tokens(code)}")
+    
+    if can_fit_in_context(code, retrieved_data):
+        print("✅ Code fits in context window - using direct LLM analysis")
+        result = direct_llm_analysis(code, retrieved_data)
+        return [result]
+    else:
+        print("❌ Code exceeds context window - using agentic chunking approach")
+        return agentic_chunking_analysis(code, retrieved_data)
 
+def agentic_chunking_analysis(code: str, retrieved_data: str) -> List[str]:
+    """Handle chunking analysis using agents."""
+    code_chunks = create_intelligent_chunks(code, retrieved_data)
+    print(f"Created {len(code_chunks)} chunks")
+    
+    output = []
+    
+    if len(code_chunks) == 1:
+        extracted_code = agent_executor.invoke({"input": {
+            "code": code_chunks[0],
+            "retrieved_data": retrieved_data
+        }})
+        output.append(extracted_code['output'])
+    else:
+        # Multiple chunks - process each
+        for i, chunk in enumerate(code_chunks):
+            print(f"Processing chunk {i+1}/{len(code_chunks)}")
+            extracted_code = agent_executor.invoke({"input": {
+                "code": chunk,
+                "retrieved_data": retrieved_data
+            }})
+            output.append(extracted_code['output'])
+    
+    return output
+
+
+# Configuration
+CONTEXT_WINDOW = 8192  # Configurable context window
+MODEL_NAME = "gpt-4o-mini"
+SAFETY_BUFFER = 500  # Reserve tokens for response
 
 # Initialize LLM
-llm = ChatOpenAI(model="gpt-4o")
+llm = ChatOpenAI(model=MODEL_NAME)
+
+# Initialize tiktoken encoder for the model
+try:
+    encoding = tiktoken.encoding_for_model(MODEL_NAME)
+except KeyError:
+    # Fallback to cl100k_base if model not found
+    encoding = tiktoken.get_encoding("cl100k_base")
+
+def count_tokens(text: str) -> int:
+    """Count tokens in text using tiktoken."""
+    return len(encoding.encode(text))
+
+def estimate_prompt_tokens(retrieved_data: str) -> int:
+    """Estimate tokens used by the prompt template."""
+    # Base prompt template tokens (estimated)
+    base_prompt = """
+    # CONTEXT #
+    You are a software engineer and security expert who specializes in analyzing code snippets and finding vulnerabilities.
+
+    # OBJECTIVE #
+    Using the retrieved data to provide some context, extract only the relevant code that is affected by the CWE or CVE in question. If the snippet does not contain any vulnerabilities, 
+    return the text "Not vulnerable" only.
+
+    # STYLE #
+    If you find any vulnerable snippet, return just that snippet as your response. If the snippet is not vulnerable, return the text "Not vulnerable".
+
+    # TONE #
+    Professional and technical.
+
+    # AUDIENCE #
+    Software engineers and security experts.
+
+    # RESPONSE FORMAT #
+    If the snippet has vulnerable code, present your response like this:
+    ** Vulnerable Code: **
+    Snippet of vulnerable code
+
+    If the snippet is not vulnerable, respond strictly with: "Not vulnerable"
+
+    
+    Using this code snippet and the provided data which contains previous examples of this vulnerability, identify and extract the vulnerable code:
+    # RETRIEVED DATA #
+    {retrieved_data}
+    
+    # CODE SNIPPET #
+    {code}
+    """
+    
+    prompt_tokens = count_tokens(base_prompt)
+    retrieved_data_tokens = count_tokens(retrieved_data)
+    
+    return prompt_tokens + retrieved_data_tokens
+
+def can_fit_in_context(code: str, retrieved_data: str, context_window: int = CONTEXT_WINDOW) -> bool:
+    """Check if code + prompt can fit in context window."""
+    code_tokens = count_tokens(code)
+    prompt_tokens = estimate_prompt_tokens(retrieved_data)
+    total_tokens = code_tokens + prompt_tokens + SAFETY_BUFFER
+    
+    return total_tokens <= context_window
+
+def calculate_optimal_chunk_size(context_window: int, retrieved_data: str) -> int:
+    """Calculate optimal chunk size based on context window and prompt size."""
+    prompt_tokens = estimate_prompt_tokens(retrieved_data)
+    available_tokens = context_window - prompt_tokens - SAFETY_BUFFER
+    
+    # Convert tokens back to approximate characters (assuming 3.5 chars per token)
+    chunk_size_chars = int(available_tokens * 3.5)
+    
+    # Ensure minimum viable chunk size
+    return max(chunk_size_chars, 500)
+
+def direct_llm_analysis(code: str, retrieved_data: str) -> str:
+    """Directly analyze code using LLM without chunking and generate recommendation."""
+    prompt = f"""
+    # CONTEXT #
+    You are a software engineer and security expert who specializes in providing recommendations for fixing vulnerabilities affected by different CWEs and CVEs.
+
+    # OBJECTIVE #
+    Based on the provided code snippet and CWE/CVE data, generate a comprehensive recommendation for fixing any vulnerabilities found. If no vulnerabilities are found, explain why the code is secure.
+
+    # STYLE #
+    Write in a technical and concise manner, providing clear and actionable steps.
+
+    # TONE #
+    Professional and technical.
+
+    # AUDIENCE #
+    The target audience is software developers and security professionals who are looking to secure their code against known vulnerabilities.
+
+    # RESPONSE FORMAT #
+    Provide a structured recommendation in the following format:
+    - Issue: [Brief description of the vulnerability or security assessment]
+    - Recommendation: [Detailed steps to fix the vulnerability or confirmation of security]
+    - Fix: [Code snippet demonstrating the fix, or explanation of why no fix is needed]
+
+    # PROMPT #
+    Analyze the following code snippet considering the CWE/CVE context and provide a comprehensive security recommendation:
+    
+    # CWE/CVE Data #
+    {retrieved_data}
+
+    # Code Snippet #
+    {code}
+    """
+    
+    response = llm.invoke(prompt.strip())
+    return response.content if hasattr(response, 'content') else str(response)
 
 # Pull prompt template
 prompt = hub.pull("hwchase17/openai-tools-agent")
@@ -1009,8 +1166,8 @@ class ExtractVulnerableCodeArgs(BaseModel):
     
 # Extract vulnerable code tool
 class ExtractVulnerableCodeTool(BaseTool):
-	name = "extract_vulnerable_snippet"
-	description = "Extracts vulnerable code from a code snippet"
+	name: str = "extract_vulnerable_snippet"
+	description: str = "Extracts vulnerable code from a code snippet"
 	args_schema: Type[BaseModel] = ExtractVulnerableCodeArgs
     
 	def _run(self, code: str, retrieved_data: str) -> str:
@@ -1057,8 +1214,8 @@ class GenerateFinalRecommendationArgs(BaseModel):
 
 # Generate final recommendation tool
 class GenerateFinalRecommendationTool(BaseTool):
-    name = "generate_final_recommendation"
-    description = "Generates a final recommendation for fixing the vulnerability based on the chunk outputs"
+    name: str = "generate_final_recommendation"
+    description: str = "Generates a final recommendation for fixing the vulnerability based on the chunk outputs"
     args_schema: Type[BaseModel] = GenerateFinalRecommendationArgs
     
     def _run(self, chunk_outputs: List[str], cwe_cve_data: str) -> str:
@@ -1119,54 +1276,22 @@ agent_executor = AgentExecutor.from_agent_and_tools(
 )
 
 
-print("Code chunks:")
-print(len(code_chunks))
+# Main execution with intelligent token-based approach
+output = analyze_code_intelligently(code_before, retrieved_data)
 
-output = []
-
-# Handle single or multiple chunks
-if len(code_chunks) == 1:
-    extracted_code = agent_executor.invoke({"input": {
-        "code": code_chunks[0],  # Single chunk
-        "retrieved_data": retrieved_data
-    }})
-    output.append(extracted_code['output'])
-    print(extracted_code['output'])
-
-else:
-    # Multiple chunks, dynamically create tools and run in parallel
-    from langchain_core.runnables import Runnable, RunnableLambda, RunnableMap
-
-    # Create a tool for each chunk
-    tools = [ExtractVulnerableCodeTool() for _ in code_chunks]
-    
-    # Map the tools to run on each chunk simultaneously
-    tool_map = RunnableMap({
-        f"tool_{i}": RunnableLambda(lambda chunk=code_chunks[i]: agent_executor.invoke({"input": {
-            "code": chunk,
-            "retrieved_data": retrieved_data
-        }}))
-        for i in range(len(code_chunks))
-    })
-
-    # Execute the tools concurrently
-    results = tool_map.invoke({})
-    
-    # Output the results
-    for i, result in enumerate(results.values()):
-        output.append(result['output'])
-        # print(f"Result for chunk {i + 1}: {result['output']}")
-
-print(output)
+print("\n=== ANALYSIS RESULTS ===")
+for i, result in enumerate(output):
+    if len(output) > 1:
+        print(f"\nChunk {i+1} result:")
+    print(result)
 
 
-final_tools = [
-    GenerateFinalRecommendationTool()
-]
-
-# After collecting chunk outputs
+# Generate final recommendation if we have multiple outputs
 if len(output) > 1:
-    # Pass the outputs to the GenerateFinalRecommendationTool
+    print("\n=== GENERATING FINAL RECOMMENDATION ===")
+    
+    final_tools = [GenerateFinalRecommendationTool()]
+    
     final_agent = create_tool_calling_agent(
         llm=llm,
         tools=final_tools,
@@ -1180,12 +1305,12 @@ if len(output) > 1:
         handle_parsing_errors=True
     )
     
-    # Use the tool to generate a final recommendation based on the chunk outputs
     final_recommendation = final_agent_executor.invoke({"input": {
-        "chunk_outputs": output,  # Pass the collected outputs from chunks
-        "cwe_cve_data": retrieved_data  # CWE/CVE context information
+        "chunk_outputs": output,
+        "cwe_cve_data": retrieved_data
     }})
     
-    # Print the final recommendation
-    print("Final Recommendation for Fixing the Vulnerability:")
+    print("\n=== FINAL RECOMMENDATION ===")
     print(final_recommendation['output'])
+else:
+    print("\n=== SINGLE OUTPUT - NO RECOMMENDATION SYNTHESIS NEEDED ===")
