@@ -1,0 +1,522 @@
+cwe,cve,cwe_cve_idx,recommendation,code_snippet,context,Relevance Score,Completeness Score,Correctness Score,Identification of Vulnerable Code Score,Code Guidance Score
+CWE-787,CVE-2018-12714,CWE-787_CVE-2018-12714_0,"- **Issue:** The function `trace_iterator_increment` does not validate the index `iter->idx` before incrementing it. If `iter->idx` is at its maximum value, incrementing it could lead to an out-of-bounds access, resulting in a potential denial of service or memory corruption (CWE-787: Out-of-bounds Write).
+
+- **Recommendation:** Before incrementing `iter->idx`, check if it is within the valid range. If it is at its maximum value, handle the situation appropriately, either by resetting it or returning an error. This will prevent out-of-bounds access and ensure the integrity of the data structure.
+
+- **Fix:**
+```c
+static void trace_iterator_increment(struct trace_iterator *iter)
+{
+	struct ring_buffer_iter *buf_iter = trace_buffer_iter(iter, iter->cpu);
+
+	// Check if idx is within valid bounds before incrementing
+	if (iter->idx < MAX_ITER_INDEX) { // Assume MAX_ITER_INDEX is defined appropriately
+		iter->idx++;
+		if (buf_iter)
+			ring_buffer_read(buf_iter, NULL);
+	} else {
+		// Handle the case where idx is at its maximum value
+		// This could be a reset or an error log
+		iter->idx = 0; // Example: Resetting to 0
+		// Alternatively, you could log an error or return an error code
+	}
+}
+```
+
+In this fix, `MAX_ITER_INDEX` should be defined based on the maximum allowable index for the `iter->idx` variable. This ensures that the increment operation does not lead to an out-of-bounds write, thus addressing the vulnerability effectively.","### Vulnerable Code
+static void trace_iterator_increment(struct trace_iterator *iter)
+{
+	struct ring_buffer_iter *buf_iter = trace_buffer_iter(iter, iter->cpu);
+
+	iter->idx++;
+	if (buf_iter)
+		ring_buffer_read(buf_iter, NULL);
+}
+
+
+
+### Vulnerable Code Fix
+static void trace_iterator_increment(struct trace_iterator *iter)
+{
+	struct ring_buffer_iter *buf_iter = trace_buffer_iter(iter, iter->cpu);
+
+	iter->idx++;
+	if (buf_iter)
+		ring_buffer_read(buf_iter, NULL);
+}
+
+","Context:
+MITRE CWE Information:
+Summary: 
+Context: CWE ID: CWE-787
+
+BigVul Vulnerability Information:
+Summaries: An issue was discovered in the Linux kernel through 4.17.2. The filter parsing in kernel/trace/trace_events_filter.c could be called with no filter, which is an N=0 case when it expected at least one line to have been read, thus making the N-1 index invalid. This allows attackers to cause a denial of service (slab out-of-bounds write) or possibly have unspecified other impact via crafted perf_event_open and mmap system calls. | An issue was discovered in the Linux kernel through 4.17.2. The filter parsing in kernel/trace/trace_events_filter.c could be called with no filter, which is an N=0 case when it expected at least one line to have been read, thus making the N-1 index invalid. This allows attackers to cause a denial of service (slab out-of-bounds write) or possibly have unspecified other impact via crafted perf_event_open and mmap system calls. | An issue was discovered in the Linux kernel through 4.17.2. The filter parsing in kernel/trace/trace_events_filter.c could be called with no filter, which is an N=0 case when it expected at least one line to have been read, thus making the N-1 index invalid. This allows attackers to cause a denial of service (slab out-of-bounds write) or possibly have unspecified other impact via crafted perf_event_open and mmap system calls. | An issue was discovered in the Linux kernel through 4.17.2. The filter parsing in kernel/trace/trace_events_filter.c could be called with no filter, which is an N=0 case when it expected at least one line to have been read, thus making the N-1 index invalid. This allows attackers to cause a denial of service (slab out-of-bounds write) or possibly have unspecified other impact via crafted perf_event_open and mmap system calls. | An issue was discovered in the Linux kernel through 4.17.2. The filter parsing in kernel/trace/trace_events_filter.c could be called with no filter, which is an N=0 case when it expected at least one line to have been read, thus making the N-1 index invalid. This allows attackers to cause a denial of service (slab out-of-bounds write) or possibly have unspecified other impact via crafted perf_event_open and mmap system calls.
+Contexts: Vulnerability: CVE-2018-12714
+Weakness: CWE-787 | Vulnerability: CVE-2018-12714
+Weakness: CWE-787 | Vulnerability: CVE-2018-12714
+Weakness: CWE-787 | Vulnerability: CVE-2018-12714
+Weakness: CWE-787 | Vulnerability: CVE-2018-12714
+Weakness: CWE-787
+Vulnerability and Fix Examples:
+Example 1:
+VULNERABLE CODE:
+void tracing_record_taskinfo_sched_switch(struct task_struct *prev,
+					  struct task_struct *next, int flags)
+{
+	bool done;
+
+	if (tracing_record_taskinfo_skip(flags))
+		return;
+
+	/*
+	 * Record as much task information as possible. If some fail, continue
+	 * to try to record the others.
+	 */
+	done  = !(flags & TRACE_RECORD_CMDLINE) || trace_save_cmdline(prev);
+	done &= !(flags & TRACE_RECORD_CMDLINE) || trace_save_cmdline(next);
+	done &= !(flags & TRACE_RECORD_TGID) || trace_save_tgid(prev);
+	done &= !(flags & TRACE_RECORD_TGID) || trace_save_tgid(next);
+
+	/* If recording any information failed, retry again soon. */
+	if (!done)
+		return;
+
+	__this_cpu_write(trace_taskinfo_save, false);
+}
+
+
+FIXED CODE:
+void tracing_record_taskinfo_sched_switch(struct task_struct *prev,
+					  struct task_struct *next, int flags)
+{
+	bool done;
+
+	if (tracing_record_taskinfo_skip(flags))
+		return;
+
+	/*
+	 * Record as much task information as possible. If some fail, continue
+	 * to try to record the others.
+	 */
+	done  = !(flags & TRACE_RECORD_CMDLINE) || trace_save_cmdline(prev);
+	done &= !(flags & TRACE_RECORD_CMDLINE) || trace_save_cmdline(next);
+	done &= !(flags & TRACE_RECORD_TGID) || trace_save_tgid(prev);
+	done &= !(flags & TRACE_RECORD_TGID) || trace_save_tgid(next);
+
+	/* If recording any information failed, retry again soon. */
+	if (!done)
+		return;
+
+	__this_cpu_write(trace_taskinfo_save, false);
+}
+
+
+Example 2:
+VULNERABLE CODE:
+static int filter_pred_strloc(struct filter_pred *pred, void *event)
+{
+	u32 str_item = *(u32 *)(event + pred->offset);
+	int str_loc = str_item & 0xffff;
+	int str_len = str_item >> 16;
+	char *addr = (char *)(event + str_loc);
+	int cmp, match;
+
+	cmp = pred->regex.match(addr, &pred->regex, str_len);
+
+	match = cmp ^ pred->not;
+
+	return match;
+}
+
+
+FIXED CODE:
+static int filter_pred_strloc(struct filter_pred *pred, void *event)
+{
+	u32 str_item = *(u32 *)(event + pred->offset);
+	int str_loc = str_item & 0xffff;
+	int str_len = str_item >> 16;
+	char *addr = (char *)(event + str_loc);
+	int cmp, match;
+
+	cmp = pred->regex.match(addr, &pred->regex, str_len);
+
+	match = cmp ^ pred->not;
+
+	return match;
+}
+
+
+Example 3:
+VULNERABLE CODE:
+int tracing_is_on(void)
+{
+	return tracer_tracing_is_on(&global_trace);
+}
+
+
+FIXED CODE:
+int tracing_is_on(void)
+{
+	return tracer_tracing_is_on(&global_trace);
+}
+
+
+Example 4:
+VULNERABLE CODE:
+static int filter_pred_pchar(struct filter_pred *pred, void *event)
+{
+	char **addr = (char **)(event + pred->offset);
+	int cmp, match;
+	int len = strlen(*addr) + 1;	/* including tailing '\0' */
+
+	cmp = pred->regex.match(*addr, &pred->regex, len);
+
+	match = cmp ^ pred->not;
+
+	return match;
+}
+
+
+FIXED CODE:
+static int filter_pred_pchar(struct filter_pred *pred, void *event)
+{
+	char **addr = (char **)(event + pred->offset);
+	int cmp, match;
+	int len = strlen(*addr) + 1;	/* including tailing '\0' */
+
+	cmp = pred->regex.match(*addr, &pred->regex, len);
+
+	match = cmp ^ pred->not;
+
+	return match;
+}
+
+
+Example 5:
+VULNERABLE CODE:
+static int tracing_open(struct inode *inode, struct file *file)
+{
+	struct trace_array *tr = inode->i_private;
+	struct trace_iterator *iter;
+	int ret = 0;
+
+	if (trace_array_get(tr) < 0)
+		return -ENODEV;
+
+	/* If this file was open for write, then erase contents */
+	if ((file->f_mode & FMODE_WRITE) && (file->f_flags & O_TRUNC)) {
+		int cpu = tracing_get_cpu(inode);
+		struct trace_buffer *trace_buf = &tr->trace_buffer;
+
+#ifdef CONFIG_TRACER_MAX_TRACE
+		if (tr->current_trace->print_max)
+			trace_buf = &tr->max_buffer;
+#endif
+
+		if (cpu == RING_BUFFER_ALL_CPUS)
+			tracing_reset_online_cpus(trace_buf);
+		else
+			tracing_reset(trace_buf, cpu);
+	}
+
+	if (file->f_mode & FMODE_READ) {
+		iter = __tracing_open(inode, file, false);
+		if (IS_ERR(iter))
+			ret = PTR_ERR(iter);
+		else if (tr->trace_flags & TRACE_ITER_LATENCY_FMT)
+			iter->iter_flags |= TRACE_FILE_LAT_FMT;
+	}
+
+	if (ret < 0)
+		trace_array_put(tr);
+
+	return ret;
+}
+
+
+FIXED CODE:
+static int tracing_open(struct inode *inode, struct file *file)
+{
+	struct trace_array *tr = inode->i_private;
+	struct trace_iterator *iter;
+	int ret = 0;
+
+	if (trace_array_get(tr) < 0)
+		return -ENODEV;
+
+	/* If this file was open for write, then erase contents */
+	if ((file->f_mode & FMODE_WRITE) && (file->f_flags & O_TRUNC)) {
+		int cpu = tracing_get_cpu(inode);
+		struct trace_buffer *trace_buf = &tr->trace_buffer;
+
+#ifdef CONFIG_TRACER_MAX_TRACE
+		if (tr->current_trace->print_max)
+			trace_buf = &tr->max_buffer;
+#endif
+
+		if (cpu == RING_BUFFER_ALL_CPUS)
+			tracing_reset_online_cpus(trace_buf);
+		else
+			tracing_reset(trace_buf, cpu);
+	}
+
+	if (file->f_mode & FMODE_READ) {
+		iter = __tracing_open(inode, file, false);
+		if (IS_ERR(iter))
+			ret = PTR_ERR(iter);
+		else if (tr->trace_flags & TRACE_ITER_LATENCY_FMT)
+			iter->iter_flags |= TRACE_FILE_LAT_FMT;
+	}
+
+	if (ret < 0)
+		trace_array_put(tr);
+
+	return ret;
+}
+
+
+",0.8742497077066227,0.8213732153282317,0.848995073356338,0.8000867283187242,0.8902784166034987
+CWE-416,CVE-2018-16541,CWE-416_CVE-2018-16541_1,"- **Issue:** The function `gs_main_run_file_open` is vulnerable to improper resource management, specifically related to the handling of file resources. If an attacker can supply a crafted `file_name`, it may lead to incorrect free logic, potentially causing a crash or undefined behavior in the interpreter (CWE-416).
+
+- **Recommendation:** To mitigate this vulnerability, ensure that the file resource is properly validated before being used. Implement checks to confirm that the file exists and is accessible. Additionally, ensure that any resources allocated during the file opening process are properly managed and released in case of errors. This includes handling the case where `pfref` may not be properly initialized.
+
+- **Fix:**
+```c
+gs_main_run_file_open(gs_main_instance * minst, const char *file_name, ref * pfref)
+{
+    if (minst == NULL || file_name == NULL || pfref == NULL) {
+        return_error(gs_error_typecheck); // Validate inputs
+    }
+
+    gs_main_set_lib_paths(minst);
+    
+    // Attempt to open the file and check for errors
+    if (gs_main_lib_open(minst, file_name, pfref) < 0) {
+        emprintf1(minst->heap,
+                  ""Can't find initialization file %s.\n"",
+                  file_name);
+        return_error(gs_error_Fatal);
+    }
+
+    // Set attributes only if the file was successfully opened
+    r_set_attrs(pfref, a_execute + a_executable);
+    return 0;
+}
+```
+
+### Explanation of Fix:
+1. **Input Validation:** Added checks to ensure that `minst`, `file_name`, and `pfref` are not NULL before proceeding. This prevents dereferencing NULL pointers, which could lead to crashes.
+2. **Error Handling:** The error handling remains intact, but now it is ensured that the function does not proceed with invalid inputs.
+3. **Resource Management:** The fix ensures that any resources associated with `pfref` are only manipulated if the file is successfully opened, reducing the risk of improper resource management.","### Vulnerable Code
+gs_main_run_file_open(gs_main_instance * minst, const char *file_name, ref * pfref)
+{
+    gs_main_set_lib_paths(minst);
+    if (gs_main_lib_open(minst, file_name, pfref) < 0) {
+        emprintf1(minst->heap,
+                  ""Can't find initialization file %s.\n"",
+                  file_name);
+        return_error(gs_error_Fatal);
+    }
+    r_set_attrs(pfref, a_execute + a_executable);
+    return 0;
+}
+
+
+
+### Vulnerable Code Fix
+gs_main_run_file_open(gs_main_instance * minst, const char *file_name, ref * pfref)
+{
+    gs_main_set_lib_paths(minst);
+    if (gs_main_lib_open(minst, file_name, pfref) < 0) {
+        emprintf1(minst->heap,
+                  ""Can't find initialization file %s.\n"",
+                  file_name);
+        return_error(gs_error_Fatal);
+    }
+    r_set_attrs(pfref, a_execute + a_executable);
+    return 0;
+}
+
+","Context:
+MITRE CWE Information:
+Summary: 
+Context: CWE ID: CWE-416
+
+BigVul Vulnerability Information:
+Summaries: In Artifex Ghostscript before 9.24, attackers able to supply crafted PostScript files could use incorrect free logic in pagedevice replacement to crash the interpreter. | In Artifex Ghostscript before 9.24, attackers able to supply crafted PostScript files could use incorrect free logic in pagedevice replacement to crash the interpreter. | In Artifex Ghostscript before 9.24, attackers able to supply crafted PostScript files could use incorrect free logic in pagedevice replacement to crash the interpreter. | In Artifex Ghostscript before 9.24, attackers able to supply crafted PostScript files could use incorrect free logic in pagedevice replacement to crash the interpreter. | In Artifex Ghostscript before 9.24, attackers able to supply crafted PostScript files could use incorrect free logic in pagedevice replacement to crash the interpreter.
+Contexts: Vulnerability: CVE-2018-16541
+Weakness: CWE-416 | Vulnerability: CVE-2018-16541
+Weakness: CWE-416 | Vulnerability: CVE-2018-16541
+Weakness: CWE-416 | Vulnerability: CVE-2018-16541
+Weakness: CWE-416 | Vulnerability: CVE-2018-16541
+Weakness: CWE-416
+Vulnerability and Fix Examples:
+Example 1:
+VULNERABLE CODE:
+gs_main_run_string(gs_main_instance * minst, const char *str, int user_errors,
+                   int *pexit_code, ref * perror_object)
+{
+    return gs_main_run_string_with_length(minst, str, (uint) strlen(str),
+                                          user_errors,
+                                          pexit_code, perror_object);
+}
+
+
+FIXED CODE:
+gs_main_run_string(gs_main_instance * minst, const char *str, int user_errors,
+                   int *pexit_code, ref * perror_object)
+{
+    return gs_main_run_string_with_length(minst, str, (uint) strlen(str),
+                                          user_errors,
+                                          pexit_code, perror_object);
+}
+
+
+Example 2:
+VULNERABLE CODE:
+gs_pop_string(gs_main_instance * minst, gs_string * result)
+{
+    i_ctx_t *i_ctx_p = minst->i_ctx_p;
+    ref vref;
+    int code = pop_value(i_ctx_p, &vref);
+
+    if (code < 0)
+        return code;
+    switch (r_type(&vref)) {
+        case t_name:
+            name_string_ref(minst->heap, &vref, &vref);
+            code = 1;
+            goto rstr;
+        case t_string:
+            code = (r_has_attr(&vref, a_write) ? 0 : 1);
+          rstr:result->data = vref.value.bytes;
+            result->size = r_size(&vref);
+            break;
+        default:
+            return_error(gs_error_typecheck);
+    }
+    ref_stack_pop(&o_stack, 1);
+    return code;
+}
+
+
+FIXED CODE:
+gs_pop_string(gs_main_instance * minst, gs_string * result)
+{
+    i_ctx_t *i_ctx_p = minst->i_ctx_p;
+    ref vref;
+    int code = pop_value(i_ctx_p, &vref);
+
+    if (code < 0)
+        return code;
+    switch (r_type(&vref)) {
+        case t_name:
+            name_string_ref(minst->heap, &vref, &vref);
+            code = 1;
+            goto rstr;
+        case t_string:
+            code = (r_has_attr(&vref, a_write) ? 0 : 1);
+          rstr:result->data = vref.value.bytes;
+            result->size = r_size(&vref);
+            break;
+        default:
+            return_error(gs_error_typecheck);
+    }
+    ref_stack_pop(&o_stack, 1);
+    return code;
+}
+
+
+Example 3:
+VULNERABLE CODE:
+gs_main_dump_stack(gs_main_instance *minst, int code, ref * perror_object)
+{
+    i_ctx_t *i_ctx_p = minst->i_ctx_p;
+
+    zflush(i_ctx_p);            /* force out buffered output */
+    dmprintf1(minst->heap, ""\nUnexpected interpreter error %d.\n"", code);
+    if (perror_object != 0) {
+        dmputs(minst->heap, ""Error object: "");
+        debug_print_ref(minst->heap, perror_object);
+        dmputc(minst->heap, '\n');
+    }
+    debug_dump_stack(minst->heap, &o_stack, ""Operand stack"");
+    debug_dump_stack(minst->heap, &e_stack, ""Execution stack"");
+    debug_dump_stack(minst->heap, &d_stack, ""Dictionary stack"");
+}
+
+
+FIXED CODE:
+gs_main_dump_stack(gs_main_instance *minst, int code, ref * perror_object)
+{
+    i_ctx_t *i_ctx_p = minst->i_ctx_p;
+
+    zflush(i_ctx_p);            /* force out buffered output */
+    dmprintf1(minst->heap, ""\nUnexpected interpreter error %d.\n"", code);
+    if (perror_object != 0) {
+        dmputs(minst->heap, ""Error object: "");
+        debug_print_ref(minst->heap, perror_object);
+        dmputc(minst->heap, '\n');
+    }
+    debug_dump_stack(minst->heap, &o_stack, ""Operand stack"");
+    debug_dump_stack(minst->heap, &e_stack, ""Execution stack"");
+    debug_dump_stack(minst->heap, &d_stack, ""Dictionary stack"");
+}
+
+
+Example 4:
+VULNERABLE CODE:
+gs_push_integer(gs_main_instance * minst, long value)
+{
+    ref vref;
+
+    make_int(&vref, value);
+    return push_value(minst, &vref);
+}
+
+
+FIXED CODE:
+gs_push_integer(gs_main_instance * minst, long value)
+{
+    ref vref;
+
+    make_int(&vref, value);
+    return push_value(minst, &vref);
+}
+
+
+Example 5:
+VULNERABLE CODE:
+gs_finit_push_systemdict(i_ctx_t *i_ctx_p)
+{
+    if (i_ctx_p == NULL)
+        return;
+    if (dsp == dstop ) {
+        if (ref_stack_extend(&d_stack, 1) < 0) {
+            /* zend() cannot fail */
+            (void)zend(i_ctx_p);
+        }
+    }
+    dsp++;
+    ref_assign(dsp, systemdict);
+}
+
+
+FIXED CODE:
+gs_finit_push_systemdict(i_ctx_t *i_ctx_p)
+{
+    if (i_ctx_p == NULL)
+        return;
+    if (dsp == dstop ) {
+        if (ref_stack_extend(&d_stack, 1) < 0) {
+            /* zend() cannot fail */
+            (void)zend(i_ctx_p);
+        }
+    }
+    dsp++;
+    ref_assign(dsp, systemdict);
+}
+
+
+",0.8127913296015163,0.7684254221767306,0.7150014318048373,0.669685088143482,0.7954825012840789
