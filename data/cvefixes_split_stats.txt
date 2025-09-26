@@ -1,0 +1,53 @@
+Dataset: CVEFIXES
+==================================================
+
+Train set size: 529
+Test set size: 268
+Total size: 797
+Train ratio: 0.664
+Test ratio: 0.336
+
+CWE Distribution:
+--------------------
+CWE-119: Train=37, Test=10, Total=47
+CWE-120: Train=2, Test=1, Total=3
+CWE-134: Train=1, Test=0, Total=1
+CWE-16: Train=1, Test=0, Total=1
+CWE-189: Train=24, Test=7, Total=31
+CWE-19: Train=1, Test=0, Total=1
+CWE-190: Train=2, Test=2, Total=4
+CWE-193: Train=2, Test=0, Total=2
+CWE-20: Train=46, Test=20, Total=66
+CWE-200: Train=39, Test=20, Total=59
+CWE-22: Train=19, Test=8, Total=27
+CWE-252: Train=16, Test=0, Total=16
+CWE-255: Train=6, Test=1, Total=7
+CWE-264: Train=59, Test=32, Total=91
+CWE-284: Train=1, Test=0, Total=1
+CWE-287: Train=9, Test=4, Total=13
+CWE-310: Train=7, Test=1, Total=8
+CWE-330: Train=1, Test=0, Total=1
+CWE-352: Train=1, Test=47, Total=48
+CWE-362: Train=22, Test=3, Total=25
+CWE-369: Train=1, Test=0, Total=1
+CWE-399: Train=19, Test=19, Total=38
+CWE-400: Train=48, Test=1, Total=49
+CWE-476: Train=4, Test=3, Total=7
+CWE-59: Train=1, Test=0, Total=1
+CWE-640: Train=1, Test=0, Total=1
+CWE-665: Train=1, Test=0, Total=1
+CWE-772: Train=2, Test=0, Total=2
+CWE-78: Train=1, Test=0, Total=1
+CWE-787: Train=1, Test=0, Total=1
+CWE-79: Train=68, Test=38, Total=106
+CWE-835: Train=2, Test=0, Total=2
+CWE-89: Train=10, Test=4, Total=14
+CWE-94: Train=10, Test=3, Total=13
+NVD-CWE-Other: Train=38, Test=7, Total=45
+NVD-CWE-noinfo: Train=26, Test=37, Total=63
+
+CVE Distribution:
+--------------------
+Unique CVEs in train: 218
+Unique CVEs in test: 87
+Total unique CVEs: 305
